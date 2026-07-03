@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>claude-code-cli</Name>
+  <Repository>ghcr.io/nicandr0/claude-code-cli:validated</Repository>
+  <Registry>https://github.com/nicandr0/claude-code-cli/pkgs/container/claude-code-cli</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/nicandr0/claude-code-cli/issues</Support>
+  <Project>https://github.com/nicandr0/claude-code-cli</Project>
+  <Overview>Vanilla, non-root Anthropic Claude Code CLI - nothing added except two explicit, optional pieces: a browser-terminal link (ttyd) that drops you straight into an authenticated `claude` session, and an optional built-in HTTP bridge (cc-bridge) for programmatic/chat-frontend access (e.g. a Telegram bot). No dashboard, no message bus, no orchestration daemon, no forced auto-update.&#13;&#10;&#13;&#10;WebUI link: opens a real terminal running `claude` directly in your browser - the same as `docker exec -it claude-code claude` - not a general-purpose shell and not a chat UI.&#13;&#10;&#13;&#10;cc-bridge (separate port, not for direct browser use): POST /chat {"message","model"} runs `claude -p --model &lt;model&gt;` as a subprocess and returns its reply; conversation history persists across restarts under CLAUDE_CONFIG_DIR in your choice of sqlite/markdown/json (CC_BRIDGE_STORAGE variable below); DELETE /session clears history; GET /health checks `claude` is on PATH. 120s subprocess timeout - a timed-out call returns an error but does not touch the session, so the next message continues normally.&#13;&#10;&#13;&#10;First-time setup: open the WebUI link once and run `claude login` (or set an API key - see README) before using cc-bridge.</Overview>
+  <Category>Tools: Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:7681]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/nicandr0/claude-code-cli/main/unraid/claude-code-cli.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/nicandr0/claude-code-cli/main/unraid/icon.svg</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>Vanilla, non-root Claude Code CLI plus an optional browser-terminal WebUI (ttyd, running `claude` directly) and an optional cc-bridge HTTP API for programmatic/chat-frontend access. No dashboard, no message bus, no daemon beyond those two explicit pieces.</Description>
+  <Networking>
+    <Mode>bridge</Mode>
+    <Publish>
+      <Port>
+        <HostPort>7681</HostPort>
+        <ContainerPort>7681</ContainerPort>
+        <Protocol>tcp</Protocol>
+      </Port>
+      <Port>
+        <HostPort>8642</HostPort>
+        <ContainerPort>8642</ContainerPort>
+        <Protocol>tcp</Protocol>
+      </Port>
+    </Publish>
+  </Networking>
+  <Data>
+    <Volume>
+      <ContainerDir>/home/claude/.claude</ContainerDir>
+      <HostDir>/mnt/user/appdata/claude-code-cli/config</HostDir>
+      <Mode>rw</Mode>
+    </Volume>
+    <Volume>
+      <ContainerDir>/workspace</ContainerDir>
+      <HostDir>/mnt/user/appdata/claude-code-cli/workspace</HostDir>
+      <Mode>rw</Mode>
+    </Volume>
+  </Data>
+  <Environment/>
+  <Labels/>
+  <Config Name="AppData (login + settings)" Target="/home/claude/.claude" Default="/mnt/user/appdata/claude-code-cli/config" Mode="rw" Description="This is what makes your `claude login` session, MCP servers, and installed plugins survive a container recreate or image update. Points at CLAUDE_CONFIG_DIR inside the container - do not remove this volume unless you want to lose your login." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-code-cli/config</Config>
+  <Config Name="Workspace" Target="/workspace" Default="/mnt/user/appdata/claude-code-cli/workspace" Mode="rw" Description="Working directory for `claude` sessions and cc-bridge. The appdata path below is just a starting default - for real project work, change this to point at an actual share (e.g. /mnt/user/projects/my-project) instead." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/claude-code-cli/workspace</Config>
+  <Config Name="WebUI port (ttyd)" Target="7681" Default="7681" Mode="tcp" Description="Browser terminal. Opening this in a browser lands you directly inside a live `claude` session, already authenticated via the AppData volume above - equivalent to running `docker exec -it claude-code claude` yourself. Not a dashboard." Type="Port" Display="always" Required="true" Mask="false">7681</Config>
+  <Config Name="cc-bridge port" Target="8642" Default="8642" Mode="tcp" Description="HTTP API for programmatic/chat-frontend access (e.g. a Telegram bot calling this container). Endpoints: POST /chat, DELETE /session, GET /health. Not meant for direct browser use - point automation at this port, point yourself at the WebUI port above." Type="Port" Display="always" Required="true" Mask="false">8642</Config>
+  <Config Name="CC_BRIDGE_STORAGE" Target="CC_BRIDGE_STORAGE" Default="sqlite" Mode="" Description="cc-bridge conversation history backend. sqlite (default): compact single-file DB, best for large histories. markdown: single human-readable .md file, easiest to read/edit by hand. json: single .json file, easiest to parse from other scripts. All three persist under the AppData volume and survive restarts - this only controls the file format." Type="Variable" Display="always" Required="false" Mask="false">sqlite</Config>
+  <Config Name="ANTHROPIC_API_KEY (optional)" Target="ANTHROPIC_API_KEY" Default="" Mode="" Description="Optional. Lets cc-bridge's `claude -p` subprocess calls authenticate without an interactive login. Leave blank if you've already run `claude login` once via the WebUI - that session persists in the AppData volume and works just as well." Type="Variable" Display="always" Required="false" Mask="true"/>
+</Container>

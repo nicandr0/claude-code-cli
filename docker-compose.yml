@@ -3,6 +3,16 @@ services:
     build: .
     image: claude-code-cli:latest
     container_name: claude-code
+    environment:
+      - CC_BRIDGE_STORAGE=${CC_BRIDGE_STORAGE:-sqlite}
+      # Optional: lets cc-bridge's `claude -p` subprocess calls authenticate
+      # without an interactive `claude login`. Leave unset if you've already
+      # logged in via the ttyd WebUI - that OAuth session persists in the
+      # claude-config volume and works just as well.
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    ports:
+      - "7681:7681"
+      - "8642:8642"
     volumes:
       - claude-config:/home/claude/.claude
       - workspace:/workspace
